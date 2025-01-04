@@ -1,0 +1,11 @@
+{
+    "C_Cpp.default.intelliSenseMode": "windows-msvc-arm64",
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.autoAddFileAssociations": true,
+    "C_Cpp.autocomplete": "default",
+    "C_Cpp.errorSquiggles": "disabled",
+    "ros.distro": "humble",
+    "files.associations": {
+        "main.h": "c"
+    },
+}
