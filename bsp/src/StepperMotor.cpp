@@ -16,10 +16,11 @@ void StepMotor_t::givePulse(uint32_t pulse, uint32_t freq)
     uint8_t arr = _resolution / 2; // 占空比为50%
     // 先清零缓冲区
     uint16_t max_address = pulse * period;
+    // 如果不被整除情况下要加一次
     _target_number = max_address / BUFFER_SIZE + (((max_address % BUFFER_SIZE) == 0) ? 0 : 1);
     // 每次循环的目标脉冲数,除了最后一次
     _target_pulse = pulse / _target_number;
-    // 最后一次的脉冲数
+    // 最后一次的脉冲数,考虑只有执行一次的情况
     _pulse_mod = pulse - _target_pulse * (_target_number - 1);
     if (_target_number == 1)
     {

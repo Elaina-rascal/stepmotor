@@ -33,6 +33,12 @@ public:
         _ph_pin = ph_pin;
         _channel = channel;
     }
+    /**
+     * @brief 给一定频率一定数量的脉冲,底层通过多次调用giveOncePulse来实现,通过回调来执行下一次调用
+     *
+     * @param pulse 脉冲数量
+     * @param freq 脉冲的频率
+     */
     void givePulse(uint32_t pulse, uint32_t freq = 20000);
     /**
      * @brief 给一串脉冲,脉冲的频率通过基频的间隔来实现
@@ -45,10 +51,12 @@ public:
     void dmaCallBack(void);
 
 private:
+    /*给一定数量脉冲实现相关*/
     uint16_t _pulse_mod;           // 取余的脉冲数
     uint32_t _target_pulse = 0;    // 给一串脉冲的目标脉冲数
     uint32_t _target_freq = 20000; // 给一串脉冲的目标频率
     uint16_t _target_number = 0;   // 给一串脉冲的目标次数
+    /*硬件外设相关*/
     TIM_HandleTypeDef *_tim;
     GPIO_TypeDef *_ph_port;
     uint32_t _channel;
