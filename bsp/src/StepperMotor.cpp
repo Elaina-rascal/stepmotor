@@ -9,7 +9,7 @@
  *
  */
 #include "StepMotor.h"
-void StepMotor_t::givePulse(uint32_t pulse, uint32_t freq)
+void StepMotor_t::giveOncePulse(uint32_t pulse, uint32_t freq, bool clearbuffer)
 {
     // 先算出每隔几个频率发一次脉冲
     uint32_t period = _clock_base_frequency / freq / _resolution;
@@ -20,10 +20,13 @@ void StepMotor_t::givePulse(uint32_t pulse, uint32_t freq)
     {
         return;
     }
-    memset(_buffer, 0, BUFFER_SIZE);
-    for (uint16_t i = 0; i < max_address; i += period)
+    if (clearbuffer)
     {
-        _buffer[i] = arr;
+        memset(_buffer, 0, BUFFER_SIZE);
+        for (uint16_t i = 0; i < max_address; i += period)
+        {
+            _buffer[i] = arr;
+        }
     }
 
     HAL_TIM_PWM_Start_DMA(_tim, _channel, (uint32_t *)_buffer, max_address);

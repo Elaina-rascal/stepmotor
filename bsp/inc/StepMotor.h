@@ -33,7 +33,14 @@ public:
         _ph_pin = ph_pin;
         _channel = channel;
     }
-    void givePulse(uint32_t pulse, uint32_t freq);
+    /**
+     * @brief 给一串脉冲,脉冲的频率通过基频的间隔来实现
+     *
+     * @param pulse 脉冲数量
+     * @param freq 脉冲的基频默认为20KHz
+     * @param clear_buffer 是否清空缓冲区
+     */
+    void giveOncePulse(uint32_t pulse, uint32_t freq = 20000, bool clear_buffer = true);
     void dmaCallBack(void);
 
 private:
@@ -42,7 +49,7 @@ private:
     uint32_t _channel;
     uint16_t _ph_pin;                         // 预分频
     uint32_t _clock_base_frequency = 1000000; // 时钟频率
-    uint8_t _resolution = 100;                // 分辨率
+    uint8_t _resolution = 50;                 // 分辨率
     uint8_t _buffer[BUFFER_SIZE];
 };
 
