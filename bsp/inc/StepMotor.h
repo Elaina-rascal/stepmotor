@@ -13,7 +13,7 @@
 #include "main.h"
 #include "stdint.h"
 #include "string.h"
-#define BUFFER_SIZE 2000
+#define BUFFER_SIZE 500
 /**
  * @brief 步进调用定时器默认的基频为1MHz
  * 分辨率为100
@@ -33,6 +33,7 @@ public:
         _ph_pin = ph_pin;
         _channel = channel;
     }
+    void givePulse(uint32_t pulse, uint32_t freq = 20000);
     /**
      * @brief 给一串脉冲,脉冲的频率通过基频的间隔来实现
      *
@@ -44,6 +45,10 @@ public:
     void dmaCallBack(void);
 
 private:
+    uint16_t _pulse_mod;           // 取余的脉冲数
+    uint32_t _target_pulse = 0;    // 给一串脉冲的目标脉冲数
+    uint32_t _target_freq = 20000; // 给一串脉冲的目标频率
+    uint16_t _target_number = 0;   // 给一串脉冲的目标次数
     TIM_HandleTypeDef *_tim;
     GPIO_TypeDef *_ph_port;
     uint32_t _channel;
