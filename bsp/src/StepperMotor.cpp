@@ -26,13 +26,16 @@ void StepMotor_t::update(uint16_t dt)
         _state = WaitIteration;
         break;
     case WaitIteration:
-        if (_iteration == 2 * ITERATIONS + 1)
+        if (_iteration == 2 * _itertration_num)
         {
             _state = IDLE;
         }
         else
         {
-            giveRPMAngle(_iteration_state[_iteration * 2], _iteration_state[_iteration * 2 + 1]);
+            float temp_rpm;
+            uint32_t temp_pulse;
+            getIterationData(temp_rpm, temp_pulse);
+            giveRPMPulse(temp_rpm, temp_pulse);
             _iteration++;
         }
         break;
@@ -40,36 +43,43 @@ void StepMotor_t::update(uint16_t dt)
         break;
     }
 }
-void StepMotor_t::giveRPMAngle(float rpm, float angle, bool use_soft_start)
+void StepMotor_t::giveRPMPulseSoft(float rpm, uint32_t pulse, uint16_t target_iteration_num, uint16_t itertion_pulse)
 {
-    if (!use_soft_start)
+    if (target_iteration_num != 0 && itertion_pulse != 0)
     {
-        giveRPMAngle(rpm, angle);
+        _itertration_num = target_iteration_num;
+        _iteration_pulse = itertion_pulse;
+    }
+    _soft_target_pulse = pulse;
+    _soft_target_rpm = rpm;
+
+    if (_state != IDLE || pulse == 0)
+    {
+        return;
+    }
+    // 算出剩余的脉冲数量
+    else
+    {
+        _state = Start;
+    }
+}
+void StepMotor_t::giveRPMPulse(float rpm, uint32_t pulse)
+{
+    uint32_t freq = _Subdivision * abs(rpm) * (360 / _StepAngle);
+    if (pulse == 0)
+    {
+        return;
+    }
+    // 脉冲数量
+    if (rpm > 0)
+    {
+        HAL_GPIO_WritePin(_ph_port, _ph_pin, GPIO_PIN_SET);
     }
     else
     {
-        float angle_sum = angle;
-        // 先算出缓起缓停的脉冲数量
-        for (int i = 0; i < ITERATIONS; i++)
-        {
-            _iteration_state[2 * i] = rpm / ITERATIONS * (i + 1);
-            _iteration_state[2 * i + 1] = _iteration_state[2 * i] * _StepAngle * ITERATIONANGLE;
-            angle_sum -= _iteration_state[i * 2 + 1] * 2;
-            _iteration_state[ITERATIONS * 4 - i * 2] = _iteration_state[2 * i];
-            _iteration_state[ITERATIONS * 4 - i * 2 + 1] = _iteration_state[2 * i + 1];
-        }
-        _iteration_state[ITERATIONS * 2] = rpm;
-        _iteration_state[ITERATIONS * 2 + 1] = angle_sum;
-        if (angle_sum <= 0 || _state != IDLE)
-        {
-            return;
-        }
-        // 算出剩余的角度
-        else
-        {
-            _state = Start;
-        }
+        HAL_GPIO_WritePin(_ph_port, _ph_pin, GPIO_PIN_RESET);
     }
+    givePulse(pulse, freq);
 }
 void StepMotor_t::giveRPMAngle(float rpm, float angle)
 {
@@ -150,5 +160,39 @@ void StepMotor_t::dmaCallBack(void)
         HAL_TIM_PWM_Stop_DMA(_tim, _channel);
         // _state = IDLE;
         _state = WaitIteration;
+    }
+}
+
+uint32_t StepMotor_t::angleToPulse(float angle)
+{
+    return angle / _StepAngle * _Subdivision;
+}
+
+void StepMotor_t::getIterationData(float &rpm_in, uint32_t &pulse_in)
+{
+    if (_iteration < _itertration_num)
+    {
+        rpm_in = _soft_target_rpm * _iteration / _itertration_num;
+        pulse_in = rpm_in * _iteration_pulse;
+        _soft_target_pulse -= 2 * pulse_in;
+        if (pulse_in < 0)
+        {
+            pulse_in = 0;
+        }
+    }
+    else if (_iteration == _itertration_num)
+    {
+        rpm_in = _soft_target_rpm;
+        pulse_in = _soft_target_pulse;
+    }
+    else if (_iteration <= 2 * _itertration_num)
+    {
+        rpm_in = _soft_target_rpm * (_itertration_num * 2 - _iteration) / _itertration_num;
+        pulse_in = rpm_in * _iteration_pulse;
+    }
+    else
+    {
+        rpm_in = 0;
+        pulse_in = 0;
     }
 }

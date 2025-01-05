@@ -26,7 +26,8 @@ void main_cpp(void)
     //  Motor.giveRPMAngle(debug, debug_hz);
     if (!Motor.isBusy())
     {
-      Motor.giveRPMAngle(debug, debug_hz, true);
+      // Motor.giveRPMAngle(debug, debug_hz, true);
+      Motor.giveRPMPulse(debug, Motor.angleToPulse(debug_hz));
     }
 
     Motor.update(1);

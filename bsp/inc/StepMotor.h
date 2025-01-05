@@ -14,8 +14,8 @@
 #include "stdint.h"
 #include "string.h"
 #define BUFFER_SIZE 500
-#define ITERATIONS 5     // 缓起缓停迭代次数
-#define ITERATIONANGLE 4 // 缓起缓停迭代角度
+#define ITERATIONS 10    // 缓起缓停迭代次数
+#define ITERATIONANGLE 8 // 缓起缓停迭代角度
 enum StepMotorState
 {
     BUSY,          // 正在输出脉冲
@@ -48,7 +48,8 @@ public:
         return !(_state == IDLE);
     }
     void update(uint16_t dt);
-    void giveRPMAngle(float rpm, float angle, bool use_soft_start);
+    void giveRPMPulseSoft(float rpm, uint32_t pulse, uint16_t target_iteration_num = 0, uint16_t itertion_pulse = 0);
+    void giveRPMPulse(float rpm, uint32_t pulse);
     void giveRPMAngle(float rpm, float angle);
     /**
      * @brief 给一定频率一定数量的脉冲,底层通过多次调用giveOncePulse来实现,通过回调来执行下一次调用
@@ -66,8 +67,16 @@ public:
      */
     void giveOncePulse(uint32_t pulse, uint32_t freq = 20000, bool clear_buffer = true);
     void dmaCallBack(void);
+    uint32_t angleToPulse(float angle);
 
 private:
+    void getIterationData(float &rpm_in, uint32_t &pulse_in);
+    /*缓启缓停相关*/
+    uint16_t _iteration = 0;         // 当前迭代次数
+    uint32_t _soft_target_pulse = 0; // 缓启缓停的目标脉冲数
+    float _soft_target_rpm = 0;      // 缓启缓停的目标最大转速
+    uint16_t _itertration_num = 0;   // 缓启缓停的迭代次数
+    uint16_t _iteration_pulse = 0;   // 缓启缓停的每圈转速对应的脉冲数
     /*步进电机参数相关*/
     float _StepAngle = 1.8;   // 步进角
     uint8_t _Subdivision = 8; // 细分
@@ -77,8 +86,6 @@ private:
     uint32_t _target_freq = 20000; // 给一串脉冲的目标频率
     uint16_t _target_number = 0;   // 给一串脉冲的目标次数
     StepMotorState _state = IDLE;
-    float _iteration_state[4 * (ITERATIONS) + 2] = {0}; // 迭代状态
-    uint16_t _iteration = 2 * ITERATIONS + 1;           // 迭代次数
     /*硬件外设相关*/
     TIM_HandleTypeDef *_tim;
     GPIO_TypeDef *_ph_port;
