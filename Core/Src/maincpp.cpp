@@ -22,10 +22,15 @@ void main_cpp(void)
   // Motor.giveRPMAngle(1, 360);
   while (1)
   {
-    // Motor.givePulse(1600,2000);
-    //Motor.givePulse(debug, debug_hz);
-     Motor.giveRPMAngle(debug, debug_hz);
-    HAL_Delay(1500);
+
+    //  Motor.giveRPMAngle(debug, debug_hz);
+    if (!Motor.isBusy())
+    {
+      Motor.giveRPMAngle(debug, debug_hz, true);
+    }
+
+    Motor.update(1);
+    HAL_Delay(5);
   }
 }
 

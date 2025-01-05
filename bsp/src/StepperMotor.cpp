@@ -10,6 +10,64 @@
  */
 #include "StepMotor.h"
 #define abs(x) ((x) > 0 ? (x) : -(x))
+void StepMotor_t::update(uint16_t dt)
+{
+    // 1ms的时间间隔
+    switch (_state)
+    {
+    case BUSY:
+        return;
+        break;
+    case IDLE:
+        if (_iteration == 2 * ITERATIONS + 1)
+        {
+            return;
+        }
+        else
+        {
+            giveRPMAngle(_iteration_state[_iteration * 2], _iteration_state[_iteration * 2 + 1]);
+            _iteration++;
+        }
+        break;
+    case Handle:
+        _iteration = 0;
+        _state = IDLE;
+        break;
+    default:
+        break;
+    }
+}
+void StepMotor_t::giveRPMAngle(float rpm, float angle, bool use_soft_start)
+{
+    if (!use_soft_start)
+    {
+        giveRPMAngle(rpm, angle);
+    }
+    else
+    {
+        float angle_sum = angle;
+        // 先算出缓起缓停的脉冲数量
+        for (int i = 0; i < ITERATIONS; i++)
+        {
+            _iteration_state[2 * i] = rpm / ITERATIONS * (i + 1);
+            _iteration_state[2 * i + 1] = _iteration_state[i] * _StepAngle * ITERATIONANGLE;
+            angle_sum -= _iteration_state[i * 2 + 1] * 2;
+            _iteration_state[ITERATIONS * 4 - i * 2] = _iteration_state[2 * i];
+            _iteration_state[ITERATIONS * 4 - i * 2 + 1] = _iteration_state[2 * i + 1];
+        }
+        _iteration_state[ITERATIONS * 2] = rpm;
+        _iteration_state[ITERATIONS * 2 + 1] = angle_sum;
+        if (angle_sum <= 0)
+        {
+            return;
+        }
+        // 算出剩余的角度
+        else
+        {
+            _state = Handle;
+        }
+    }
+}
 void StepMotor_t::giveRPMAngle(float rpm, float angle)
 {
     // 脉冲频率

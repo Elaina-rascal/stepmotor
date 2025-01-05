@@ -14,10 +14,13 @@
 #include "stdint.h"
 #include "string.h"
 #define BUFFER_SIZE 500
+#define ITERATIONS 5     // 缓起缓停迭代次数
+#define ITERATIONANGLE 4 // 缓起缓停迭代角度
 enum StepMotorState
 {
-    IDLE,
-    BUSY
+    IDLE,  // 空闲
+    BUSY,  // 占用
+    Handle // 挂起
 };
 /**
  * @brief 步进调用定时器默认的基频为1MHz
@@ -39,6 +42,12 @@ public:
         _channel = channel;
         __HAL_TIM_SetAutoreload(_tim, _resolution - 1);
     }
+    bool isBusy(void)
+    {
+        return !(_state == IDLE && _iteration == 2 * ITERATIONS + 1);
+    }
+    void update(uint16_t dt);
+    void giveRPMAngle(float rpm, float angle, bool use_soft_start);
     void giveRPMAngle(float rpm, float angle);
     /**
      * @brief 给一定频率一定数量的脉冲,底层通过多次调用giveOncePulse来实现,通过回调来执行下一次调用
@@ -67,6 +76,8 @@ private:
     uint32_t _target_freq = 20000; // 给一串脉冲的目标频率
     uint16_t _target_number = 0;   // 给一串脉冲的目标次数
     StepMotorState _state = IDLE;
+    float _iteration_state[4 * (ITERATIONS) + 2] = {0}; // 迭代状态
+    uint16_t _iteration = 2 * ITERATIONS + 1;           // 迭代次数
     /*硬件外设相关*/
     TIM_HandleTypeDef *_tim;
     GPIO_TypeDef *_ph_port;
