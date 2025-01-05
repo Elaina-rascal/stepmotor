@@ -9,6 +9,14 @@
  *
  */
 #include "StepMotor.h"
+void StepMotor_t::giveRPMAngle(float rpm, float angle)
+{
+    // 脉冲频率
+    uint32_t freq = _Subdivision * rpm * (360 / _StepAngle);
+    // 脉冲数量
+    uint32_t pulse = _Subdivision * angle / _StepAngle;
+    givePulse(pulse, freq);
+}
 void StepMotor_t::givePulse(uint32_t pulse, uint32_t freq)
 {
     // 先算出每隔几个频率发一次脉冲
@@ -28,6 +36,7 @@ void StepMotor_t::givePulse(uint32_t pulse, uint32_t freq)
     }
     _target_freq = freq;
     giveOncePulse(_target_pulse, _target_freq);
+    _state = BUSY;
 }
 void StepMotor_t::giveOncePulse(uint32_t pulse, uint32_t freq, bool clearbuffer)
 {
@@ -67,5 +76,6 @@ void StepMotor_t::dmaCallBack(void)
     else
     {
         HAL_TIM_PWM_Stop_DMA(_tim, _channel);
+        _state = IDLE;
     }
 }

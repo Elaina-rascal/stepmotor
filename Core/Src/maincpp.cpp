@@ -12,15 +12,20 @@ __asm(".global __use_no_semihosting");
 #include "maincpp.h"
 #include "StepMotor.h"
 uint16_t debug;
-uint32_t debug_hz = 20000;
+uint32_t debug_hz = 0;
+// bool debug_flag = false;
 auto Motor = StepMotor_t();
 void main_cpp(void)
 {
   Motor = StepMotor_t(&htim2, TIM_CHANNEL_2, GPIOB, GPIO_PIN_4);
+  //Motor.givePulse(2000,1000);
+	//Motor.giveRPMAngle(1, 360);
   while (1)
   {
-    Motor.givePulse(debug, debug_hz);
-    HAL_Delay(500);
+		Motor.givePulse(debug,debug_hz);
+    //Motor.giveOncePulse(debug,debug_hz);
+		//Motor.giveRPMAngle(debug, debug_hz);
+    HAL_Delay(1500);
   }
 }
 

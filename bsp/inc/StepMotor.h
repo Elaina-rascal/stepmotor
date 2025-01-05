@@ -14,6 +14,11 @@
 #include "stdint.h"
 #include "string.h"
 #define BUFFER_SIZE 500
+enum StepMotorState
+{
+    IDLE,
+    BUSY
+};
 /**
  * @brief 步进调用定时器默认的基频为1MHz
  * 分辨率为100
@@ -33,13 +38,15 @@ public:
         _ph_pin = ph_pin;
         _channel = channel;
     }
+    void giveRPMAngle(float rpm, float angle);
     /**
      * @brief 给一定频率一定数量的脉冲,底层通过多次调用giveOncePulse来实现,通过回调来执行下一次调用
      *
      * @param pulse 脉冲数量
      * @param freq 脉冲的频率
      */
-    void givePulse(uint32_t pulse, uint32_t freq = 20000);
+    void
+    givePulse(uint32_t pulse, uint32_t freq = 20000);
     /**
      * @brief 给一串脉冲,脉冲的频率通过基频的间隔来实现
      *
@@ -51,17 +58,21 @@ public:
     void dmaCallBack(void);
 
 private:
+    /*步进电机参数相关*/
+    float _StepAngle = 1.8;   // 步进角
+    uint8_t _Subdivision = 8; // 细分
     /*给一定数量脉冲实现相关*/
     uint16_t _pulse_mod;           // 取余的脉冲数
     uint32_t _target_pulse = 0;    // 给一串脉冲的目标脉冲数
     uint32_t _target_freq = 20000; // 给一串脉冲的目标频率
     uint16_t _target_number = 0;   // 给一串脉冲的目标次数
+    StepMotorState _state = IDLE;
     /*硬件外设相关*/
     TIM_HandleTypeDef *_tim;
     GPIO_TypeDef *_ph_port;
     uint32_t _channel;
     uint16_t _ph_pin;                         // 预分频
-    uint32_t _clock_base_frequency = 1000000; // 时钟频率
+    uint32_t _clock_base_frequency = 1000000; // 时钟频率经过预分频后的频率
     uint8_t _resolution = 50;                 // 分辨率
     uint8_t _buffer[BUFFER_SIZE];
 };
