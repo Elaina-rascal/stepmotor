@@ -9,12 +9,21 @@
  *
  */
 #include "StepMotor.h"
+#define abs(x) ((x) > 0 ? (x) : -(x))
 void StepMotor_t::giveRPMAngle(float rpm, float angle)
 {
     // 脉冲频率
-    uint32_t freq = _Subdivision * rpm * (360 / _StepAngle);
+    uint32_t freq = _Subdivision * abs(rpm) * (360 / _StepAngle);
     // 脉冲数量
     uint32_t pulse = _Subdivision * angle / _StepAngle;
+    if (rpm > 0)
+    {
+        HAL_GPIO_WritePin(_ph_port, _ph_pin, GPIO_PIN_SET);
+    }
+    else
+    {
+        HAL_GPIO_WritePin(_ph_port, _ph_pin, GPIO_PIN_RESET);
+    }
     givePulse(pulse, freq);
 }
 void StepMotor_t::givePulse(uint32_t pulse, uint32_t freq)
@@ -42,7 +51,7 @@ void StepMotor_t::giveOncePulse(uint32_t pulse, uint32_t freq, bool clearbuffer)
 {
     // 先算出每隔几个频率发一次脉冲
     uint32_t period = _clock_base_frequency / freq / _resolution;
-    uint8_t arr = _resolution / 2; // 占空比为50%
+    uint8_t ccr = _resolution / 2; // 占空比为50%
     // 先清零缓冲区
     uint16_t max_address = pulse * period;
     if (max_address > BUFFER_SIZE)
@@ -55,7 +64,7 @@ void StepMotor_t::giveOncePulse(uint32_t pulse, uint32_t freq, bool clearbuffer)
         for (uint16_t i = 0; i < pulse; i += 1)
         {
             uint16_t j = i * period;
-            _buffer[j] = arr;
+            _buffer[j] = ccr;
         }
     }
 
@@ -63,12 +72,12 @@ void StepMotor_t::giveOncePulse(uint32_t pulse, uint32_t freq, bool clearbuffer)
 }
 void StepMotor_t::dmaCallBack(void)
 {
-    if (_target_number > 1)
+    if (_target_number > 2)
     {
         giveOncePulse(_target_pulse, _target_freq, false);
         _target_number--;
     }
-    else if (_target_number == 1 && _pulse_mod > 0)
+    else if (_target_number == 2 && _pulse_mod > 0)
     {
         giveOncePulse(_pulse_mod, _target_freq);
         _target_number--;
