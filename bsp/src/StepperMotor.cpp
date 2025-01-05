@@ -19,19 +19,22 @@ void StepMotor_t::update(uint16_t dt)
         return;
         break;
     case IDLE:
+        return;
+        break;
+    case Start:
+        _iteration = 0;
+        _state = WaitIteration;
+        break;
+    case WaitIteration:
         if (_iteration == 2 * ITERATIONS + 1)
         {
-            return;
+            _state = IDLE;
         }
         else
         {
             giveRPMAngle(_iteration_state[_iteration * 2], _iteration_state[_iteration * 2 + 1]);
             _iteration++;
         }
-        break;
-    case Handle:
-        _iteration = 0;
-        _state = IDLE;
         break;
     default:
         break;
@@ -50,21 +53,21 @@ void StepMotor_t::giveRPMAngle(float rpm, float angle, bool use_soft_start)
         for (int i = 0; i < ITERATIONS; i++)
         {
             _iteration_state[2 * i] = rpm / ITERATIONS * (i + 1);
-            _iteration_state[2 * i + 1] = _iteration_state[i] * _StepAngle * ITERATIONANGLE;
+            _iteration_state[2 * i + 1] = _iteration_state[2 * i] * _StepAngle * ITERATIONANGLE;
             angle_sum -= _iteration_state[i * 2 + 1] * 2;
             _iteration_state[ITERATIONS * 4 - i * 2] = _iteration_state[2 * i];
             _iteration_state[ITERATIONS * 4 - i * 2 + 1] = _iteration_state[2 * i + 1];
         }
         _iteration_state[ITERATIONS * 2] = rpm;
         _iteration_state[ITERATIONS * 2 + 1] = angle_sum;
-        if (angle_sum <= 0)
+        if (angle_sum <= 0 || _state != IDLE)
         {
             return;
         }
         // 算出剩余的角度
         else
         {
-            _state = Handle;
+            _state = Start;
         }
     }
 }
@@ -145,6 +148,7 @@ void StepMotor_t::dmaCallBack(void)
     else
     {
         HAL_TIM_PWM_Stop_DMA(_tim, _channel);
-        _state = IDLE;
+        // _state = IDLE;
+        _state = WaitIteration;
     }
 }

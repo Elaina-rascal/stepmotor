@@ -18,9 +18,10 @@
 #define ITERATIONANGLE 4 // 缓起缓停迭代角度
 enum StepMotorState
 {
-    IDLE,  // 空闲
-    BUSY,  // 占用
-    Handle // 挂起
+    BUSY,          // 正在输出脉冲
+    IDLE,          // 空闲
+    WaitIteration, // 等待迭代
+    Start,         // 启动
 };
 /**
  * @brief 步进调用定时器默认的基频为1MHz
@@ -44,7 +45,7 @@ public:
     }
     bool isBusy(void)
     {
-        return !(_state == IDLE && _iteration == 2 * ITERATIONS + 1);
+        return !(_state == IDLE);
     }
     void update(uint16_t dt);
     void giveRPMAngle(float rpm, float angle, bool use_soft_start);
