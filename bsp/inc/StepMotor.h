@@ -45,8 +45,7 @@ public:
      * @param pulse 脉冲数量
      * @param freq 脉冲的频率
      */
-    void
-    givePulse(uint32_t pulse, uint32_t freq = 20000);
+    void givePulse(uint32_t pulse, uint32_t freq = 20000);
     /**
      * @brief 给一串脉冲,脉冲的频率通过基频的间隔来实现
      *
@@ -73,7 +72,7 @@ private:
     uint32_t _channel;
     uint16_t _ph_pin;                         // 预分频
     uint32_t _clock_base_frequency = 1000000; // 时钟频率经过预分频后的频率
-    uint8_t _resolution = 50;                 // 分辨率
+    uint8_t _resolution = 10;                // 分辨率
     uint8_t _buffer[BUFFER_SIZE];
 };
 
