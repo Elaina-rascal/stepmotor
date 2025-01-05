@@ -22,9 +22,9 @@ void main_cpp(void)
   // Motor.giveRPMAngle(1, 360);
   while (1)
   {
-     Motor.givePulse(2000,1600);
-    // Motor.giveOncePulse(debug,debug_hz);
-    //Motor.giveRPMAngle(debug, debug_hz);
+    // Motor.givePulse(1600,2000);
+    //Motor.givePulse(debug, debug_hz);
+     Motor.giveRPMAngle(debug, debug_hz);
     HAL_Delay(1500);
   }
 }

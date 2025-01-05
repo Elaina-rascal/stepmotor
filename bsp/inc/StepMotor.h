@@ -37,6 +37,7 @@ public:
         _ph_port = ph_port;
         _ph_pin = ph_pin;
         _channel = channel;
+        __HAL_TIM_SetAutoreload(_tim, _resolution - 1);
     }
     void giveRPMAngle(float rpm, float angle);
     /**
@@ -72,7 +73,7 @@ private:
     uint32_t _channel;
     uint16_t _ph_pin;                         // 预分频
     uint32_t _clock_base_frequency = 1000000; // 时钟频率经过预分频后的频率
-    uint8_t _resolution = 10;                // 分辨率
+    uint8_t _resolution = 10;                 // 分辨率
     uint8_t _buffer[BUFFER_SIZE];
 };
 
