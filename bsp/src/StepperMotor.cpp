@@ -22,12 +22,12 @@ void StepMotor_t::update(uint16_t dt)
         return;
         break;
     case Start:
-        _iteration = 0;
         _state = WaitIteration;
         break;
     case WaitIteration:
         if (_iteration == 2 * _itertration_num)
         {
+            _iteration = 0;
             _state = IDLE;
         }
         else
@@ -107,7 +107,7 @@ void StepMotor_t::givePulse(uint32_t pulse, uint32_t freq)
     // 如果不被整除情况下要加一次
     // _target_number = max_address / BUFFER_SIZE + (((max_address % BUFFER_SIZE) == 0) ? 0 : 1);
     // 每次循环的目标脉冲数,除了最后一次
-    _target_pulse = BUFFER_SIZE / period;
+    _target_pulse = BUFFER_SIZE / period > pulse ? pulse : BUFFER_SIZE / period;
     // 如果不被整除情况下要加一次
     _target_number = pulse / _target_pulse + ((pulse % _target_pulse == 0) ? 0 : 1);
     // 最后一次的脉冲数,考虑只有执行一次的情况
@@ -143,8 +143,12 @@ void StepMotor_t::giveOncePulse(uint32_t pulse, uint32_t freq, bool clearbuffer)
 
     HAL_TIM_PWM_Start_DMA(_tim, _channel, (uint32_t *)_buffer, max_address);
 }
-void StepMotor_t::dmaCallBack(void)
+void StepMotor_t::dmaCallBack(TIM_HandleTypeDef *htim)
 {
+    if (htim->Instance != _tim->Instance)
+    {
+        return;
+    }
     if (_target_number > 2)
     {
         giveOncePulse(_target_pulse, _target_freq, false);
@@ -173,7 +177,7 @@ void StepMotor_t::getIterationData(float &rpm_in, uint32_t &pulse_in)
     if (_iteration < _itertration_num)
     {
         rpm_in = _soft_target_rpm * _iteration / _itertration_num;
-        pulse_in = rpm_in * _iteration_pulse;
+        pulse_in = abs(rpm_in) * _iteration_pulse;
         _soft_target_pulse -= 2 * pulse_in;
         if (pulse_in < 0)
         {
@@ -188,7 +192,7 @@ void StepMotor_t::getIterationData(float &rpm_in, uint32_t &pulse_in)
     else if (_iteration <= 2 * _itertration_num)
     {
         rpm_in = _soft_target_rpm * (_itertration_num * 2 - _iteration) / _itertration_num;
-        pulse_in = rpm_in * _iteration_pulse;
+        pulse_in = abs(rpm_in) * _iteration_pulse;
     }
     else
     {

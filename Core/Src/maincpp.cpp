@@ -27,17 +27,17 @@ void main_cpp(void)
     if (!Motor.isBusy())
     {
       // Motor.giveRPMAngle(debug, debug_hz, true);
-      Motor.giveRPMPulse(debug, Motor.angleToPulse(debug_hz));
+      Motor.giveRPMPulseSoft(debug, 3200);
     }
 
     Motor.update(1);
-    HAL_Delay(5);
+    HAL_Delay(2);
   }
 }
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
-  Motor.dmaCallBack();
+  Motor.dmaCallBack(htim);
 }
 // 把半主机模式干了
 extern "C"

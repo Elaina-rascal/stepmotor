@@ -27,7 +27,7 @@
 #include "string.h"
 #define BUFFER_SIZE 500  // 缓冲区大小越大占用cpu时间越少
 #define ITERATIONS 10    // 缓起缓停迭代次数
-#define ITERATIONANGLE 8 // 缓起缓停迭代角度
+#define ITERATIONPULSE 8 // 缓起缓停迭代角度
 enum StepMotorState
 {
     BUSY,          // 正在输出脉冲
@@ -116,7 +116,7 @@ public:
      * @brief dma回调
      *
      */
-    void dmaCallBack(void);
+    void dmaCallBack(TIM_HandleTypeDef *htim);
     /**
      * @brief 将角度转换为脉冲数
      *
@@ -149,11 +149,11 @@ private:
      */
     void getIterationData(float &rpm_in, uint32_t &pulse_in);
     /*缓启缓停相关*/
-    uint16_t _iteration = 0;         // 当前迭代次数
-    uint32_t _soft_target_pulse = 0; // 缓启缓停的目标脉冲数
-    float _soft_target_rpm = 0;      // 缓启缓停的目标最大转速
-    uint16_t _itertration_num = 0;   // 缓启缓停的迭代次数
-    uint16_t _iteration_pulse = 0;   // 缓启缓停的每圈转速对应的脉冲数
+    uint16_t _iteration = 0;                    // 当前迭代次数
+    uint32_t _soft_target_pulse = 0;            // 缓启缓停的目标脉冲数
+    float _soft_target_rpm = 0;                 // 缓启缓停的目标最大转速
+    uint16_t _itertration_num = ITERATIONS;     // 缓启缓停的迭代次数
+    uint16_t _iteration_pulse = ITERATIONPULSE; // 缓启缓停的每圈转速对应的脉冲数
     /*步进电机参数相关*/
     float _StepAngle = 1.8;   // 步进角
     uint8_t _Subdivision = 8; // 细分
